@@ -1,19 +1,26 @@
-const fs = require('fs');
-const path = require('path');
-const archiver = require('archiver');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import archiver from 'archiver';
+
+// Get current directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.join(__dirname, '..');
 
 // Read the module.json file
-const moduleJson = JSON.parse(fs.readFileSync('module.json', 'utf8'));
+const moduleJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'module.json'), 'utf8'));
 const version = moduleJson.version;
 const packageName = `scryforge-v${version}.zip`;
 
 // Create output directory if it doesn't exist
-if (!fs.existsSync('package')) {
-    fs.mkdirSync('package');
+const packageDir = path.join(rootDir, 'package');
+if (!fs.existsSync(packageDir)) {
+    fs.mkdirSync(packageDir);
 }
 
 // Create a write stream
-const output = fs.createWriteStream(path.join('package', packageName));
+const output = fs.createWriteStream(path.join(packageDir, packageName));
 const archive = archiver('zip', {
     zlib: { level: 9 } // Maximum compression
 });
@@ -46,11 +53,12 @@ const filesToInclude = [
 ];
 
 filesToInclude.forEach(file => {
-    const stats = fs.statSync(file);
+    const filePath = path.join(rootDir, file);
+    const stats = fs.statSync(filePath);
     if (stats.isDirectory()) {
-        archive.directory(file, file);
+        archive.directory(filePath, file);
     } else {
-        archive.file(file, { name: file });
+        archive.file(filePath, { name: file });
     }
 });
 
