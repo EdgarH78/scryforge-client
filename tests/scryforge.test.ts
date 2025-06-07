@@ -205,5 +205,118 @@ describe('ScryForge', () => {
         });
     });
 
+    describe('removeActorCategory', () => {
+        it('should remove actor category', () => {
+            // Add two actors
+            scryForge.updateActorCategory('actor1', Category.RED);
+            scryForge.updateActorCategory('actor2', Category.BLUE);
+
+            // Remove one actor
+            scryForge.removeActorCategory('actor1');
+
+            // Verify actor1 was removed but actor2 remains
+            expect(scryForge.getTrackedActor('actor1')).toBeUndefined();
+            expect(scryForge.getTrackedActor('actor2')).toBeDefined();
+        });
+
+        it('should handle removing non-existent actor', () => {
+            scryForge.updateActorCategory('actor1', Category.RED);
+            scryForge.removeActorCategory('non-existent');
+            expect(scryForge.getTrackedActor('actor1')).toBeDefined();
+        });
+
+        it('should handle removing actor with multiple categories', () => {
+            // Add same actor with different categories
+            scryForge.updateActorCategory('actor1', Category.RED);
+            scryForge.updateActorCategory('actor1', Category.BLUE);
+            
+            scryForge.removeActorCategory('actor1');
+            
+            expect(scryForge.getTrackedActor('actor1')).toBeUndefined();
+            expect(scryForge.getTrackedActors()).toHaveLength(0);
+        });
+    });
+
+    describe('getTrackedActors', () => {
+        it('should return empty array when no actors are tracked', () => {
+            expect(scryForge.getTrackedActors()).toEqual([]);
+        });
+
+        it('should return all tracked actors', () => {
+            scryForge.updateActorCategory('actor1', Category.RED);
+            scryForge.updateActorCategory('actor2', Category.BLUE);
+
+            const trackedActors = scryForge.getTrackedActors();
+            expect(trackedActors).toHaveLength(2);
+            expect(trackedActors).toEqual(
+                expect.arrayContaining([
+                    { actorId: 'actor1', category: Category.RED },
+                    { actorId: 'actor2', category: Category.BLUE }
+                ])
+            );
+        });
+    });
+
+    describe('getAvailableCategories', () => {
+        it('should return empty array when no categories are used', () => {
+            expect(scryForge.getAvailableCategories()).toEqual([]);
+        });
+
+        it('should return all used categories', () => {
+            scryForge.updateActorCategory('actor1', Category.RED);
+            scryForge.updateActorCategory('actor2', Category.BLUE);
+
+            const categories = scryForge.getAvailableCategories();
+            expect(categories).toHaveLength(2);
+            expect(categories).toEqual(expect.arrayContaining([Category.RED, Category.BLUE]));
+        });
+
+        it('should update categories when actors are removed', () => {
+            scryForge.updateActorCategory('actor1', Category.RED);
+            scryForge.updateActorCategory('actor2', Category.BLUE);
+            scryForge.removeActorCategory('actor1');
+
+            const categories = scryForge.getAvailableCategories();
+            expect(categories).toHaveLength(1);
+            expect(categories).toEqual([Category.BLUE]);
+        });
+    });
+
+    describe('canScry', () => {
+        it('should return false when camera is not set', () => {
+            scryForge.setCamera(null as unknown as Camera);
+            expect(scryForge.canScry()).toBe(false);
+        });
+
+        it('should return true when camera is set', () => {
+            expect(scryForge.canScry()).toBe(true);
+        });
+    });
+
+    describe('calibration', () => {
+        it('should handle setting and getting calibration', () => {
+            const mockCalibration = {
+                x: 10,
+                y: 20,
+                width: 80,
+                height: 60,
+                markers: [
+                    { x: 0, y: 0 },
+                    { x: 100, y: 0 },
+                    { x: 100, y: 100 },
+                    { x: 0, y: 100 }
+                ]
+            };
+
+            expect(scryForge.getCalibration()).toBeNull();
+            
+            scryForge.setCalibration(mockCalibration);
+            expect(scryForge.getCalibration()).toEqual(mockCalibration);
+            
+            scryForge.setCalibration(null);
+            expect(scryForge.getCalibration()).toBeNull();
+        });
+    });
+
     // Add more test suites here for other ScryForge methods
 }); 
