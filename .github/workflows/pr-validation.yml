@@ -1,0 +1,59 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests with coverage
+      run: npm run test:coverage
+
+    - name: Check coverage thresholds
+      run: |
+        COVERAGE_OUTPUT=$(npm run test:coverage)
+        
+        # Extract coverage percentages
+        STATEMENTS=$(echo "$COVERAGE_OUTPUT" | grep -A 5 "All files" | awk 'NR==2 {print $2}' | tr -d '%')
+        BRANCHES=$(echo "$COVERAGE_OUTPUT" | grep -A 5 "All files" | awk 'NR==2 {print $4}' | tr -d '%')
+        FUNCTIONS=$(echo "$COVERAGE_OUTPUT" | grep -A 5 "All files" | awk 'NR==2 {print $6}' | tr -d '%')
+        LINES=$(echo "$COVERAGE_OUTPUT" | grep -A 5 "All files" | awk 'NR==2 {print $8}' | tr -d '%')
+        
+        # Check thresholds
+        THRESHOLD=80
+        
+        if (( $(echo "$STATEMENTS < $THRESHOLD" | bc -l) )); then
+          echo "Statement coverage ($STATEMENTS%) is below threshold ($THRESHOLD%)"
+          exit 1
+        fi
+        
+        if (( $(echo "$BRANCHES < $THRESHOLD" | bc -l) )); then
+          echo "Branch coverage ($BRANCHES%) is below threshold ($THRESHOLD%)"
+          exit 1
+        fi
+        
+        if (( $(echo "$FUNCTIONS < $THRESHOLD" | bc -l) )); then
+          echo "Function coverage ($FUNCTIONS%) is below threshold ($THRESHOLD%)"
+          exit 1
+        fi
+        
+        if (( $(echo "$LINES < $THRESHOLD" | bc -l) )); then
+          echo "Line coverage ($LINES%) is below threshold ($THRESHOLD%)"
+          exit 1
+        fi
+        
+        echo "All coverage thresholds met!" 
