@@ -1,0 +1,16 @@
+<form>
+  <div class="form-group">
+    <label for="camera-select">Camera:</label>
+    <select id="camera-select" name="camera">
+      {{#each cameras}}
+        <option value="{{this.deviceId}}">{{this.label}}</option>
+      {{/each}}
+    </select>
+  </div>
+
+  <div id="video-preview" style="width:100%; height:auto; margin-top:10px;"></div>
+
+  <button type="button" id="confirm-camera" style="margin-top: 10px;">
+    Use This Camera
+  </button>
+</form>
