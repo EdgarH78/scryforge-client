@@ -12,6 +12,7 @@ import { AdvancedViewPortCalibrator } from './advancedviewportcalibrator';
 import * as PIXI from 'pixi.js';
 import { CameraSelectorApp } from './cameraselector';
 import { WorldTransformerFactory } from './scryforgeworldcalibrator';
+import { localize, formatCategory } from './utils/i18n';
 
 // Add type declarations for TokenDocument
 declare global {
@@ -71,6 +72,8 @@ function getCanvas(): Canvas {
 
 Hooks.once('init', () => {
     const game = getGame();
+    
+    // Register module settings
     game.settings.register('scryforge', 'categoryAssignments', {
         name: 'Category Assignments',
         scope: 'world',
@@ -86,8 +89,8 @@ Hooks.once('init', () => {
 
     // Add display user setting
     game.settings.register('scryforge', 'displayUser', {
-        name: 'Display User',
-        hint: 'Username of the display-only user that will interact with ScryForge',
+        name: localize('Settings.DisplayUser'),
+        hint: localize('Settings.DisplayUserHint'),
         scope: 'world',
         config: true,
         type: String,
@@ -160,12 +163,12 @@ function showBaseAssignmentDialog(actor: Actor): void {
     const content = `
         <form>
             <div class="form-group">
-                <label>Select Category:</label>
+                <label>${localize('Dialog.CategoryLabel')}:</label>
                 <select name="category">
-                    <option value="">None</option>
+                    <option value="">${localize('Categories.None')}</option>
                     ${allCategories.map(category => `
                         <option value="${category}" ${currentCategory === category ? 'selected' : ''}>
-                            ${category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                            ${formatCategory(category)}
                         </option>
                     `).join('')}
                 </select>
@@ -174,12 +177,12 @@ function showBaseAssignmentDialog(actor: Actor): void {
     `;
 
     new Dialog({
-        title: `Assign Category to ${actor.name}`,
+        title: localize('Dialog.SelectCategory'),
         content,
         buttons: {
             assign: {
                 icon: '<i class="fas fa-check"></i>',
-                label: 'Assign',
+                label: localize('CameraSelector.Assign'),
                 callback: async (html: HTMLElement | JQuery<HTMLElement>) => {
                     const $html = html instanceof HTMLElement ? $(html) : html;
                     const category = $html.find('[name="category"]').val() as string;
@@ -201,11 +204,10 @@ function showBaseAssignmentDialog(actor: Actor): void {
                         )
                     );
                 }
-                
             },
             cancel: {
                 icon: '<i class="fas fa-times"></i>',
-                label: 'Cancel'
+                label: localize('CameraSelector.Cancel')
             }
         },
         default: 'assign'
@@ -309,8 +311,8 @@ async function updateTokenPositions(): Promise<void> {
     const calibration = scryForge.getCalibration();
     if (!calibration) {
         // Avoid breaking Foundry UI with Dialog.confirm
-        if (!ui.notifications?.active.find(n => $(n).text().includes("No calibration found"))) {
-            ui.notifications?.info("ScryForge: No calibration found. Please calibrate from the camera selector.");
+        if (!ui.notifications?.active.find(n => $(n).text().includes(game.i18n.localize("SCRYFORGE.Notifications.NoCalibration")))) {
+            ui.notifications?.info(localize("Notifications.NoCalibration"));
         }
         return;
     }
@@ -370,7 +372,7 @@ Hooks.on('getSceneControlButtons', (controls: SceneControl[]) => {
   
     const scryforgeControls = {
       name: 'scryforge',
-      title: 'ScryForge Controls',
+      title: localize('Controls.Title'),
       icon: 'fas fa-eye',
       layer: 'controls',
       visible: true,
@@ -378,14 +380,14 @@ Hooks.on('getSceneControlButtons', (controls: SceneControl[]) => {
       tools: [
         {
           name: 'calibrate',
-          title: 'Calibrate Display',
+          title: localize('Controls.Calibrate.Title'),
           icon: 'fas fa-crosshairs',
           visible: true,
           button: true,
           onClick: () => {
             const scCamera = scryForge.getCamera();
             if (!scCamera) {
-              ui.notifications?.warn("No camera selected.");
+              ui.notifications?.warn(localize('Controls.Calibrate.NoCamera'));
               return;
             }
             calibrate(scCamera);
@@ -393,7 +395,7 @@ Hooks.on('getSceneControlButtons', (controls: SceneControl[]) => {
         },
         {
           name: 'camera',
-          title: 'Select Camera',
+          title: localize('Controls.Camera.Title'),
           icon: 'fas fa-video',
           visible: true,
           button: true,

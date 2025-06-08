@@ -1,0 +1,71 @@
+{
+    "SCRYFORGE": {
+        "CameraSelector": {
+            "Camera": "Cámara",
+            "UseThisCamera": "Usar Esta Cámara",
+            "Cancel": "Cancelar",
+            "Assign": "Asignar"
+        },
+        "Controls": {
+            "Title": "Controles de ScryForge",
+            "Calibrate": {
+                "Title": "Calibrar Pantalla",
+                "NoCamera": "No hay cámara seleccionada."
+            },
+            "Camera": {
+                "Title": "Seleccionar Cámara"
+            }
+        },
+        "Notifications": {
+            "NoCalibration": "No se encontró calibración. Por favor, calibre desde el selector de cámara."
+        },
+        "Modes": {
+            "Training": "Entrenamiento",
+            "Production": "Producción"
+        },
+        "Categories": {
+            "None": "Ninguno",
+            "Red": "Rojo",
+            "Blue": "Azul",
+            "Green": "Verde",
+            "Violet": "Violeta",
+            "Yellow": "Amarillo",
+            "Orange": "Naranja",
+            "Turquoise": "Turquesa",
+            "Pink": "Rosa",
+            "White": "Blanco",
+            "Black": "Negro",
+            "LimeGreenViolet": "Verde Lima y Violeta",
+            "PinkGreen": "Rosa y Verde",
+            "YellowNightBlue": "Amarillo y Azul Noche",
+            "LightBlueOrange": "Azul Claro y Naranja",
+            "BrownTurquoise": "Marrón y Turquesa",
+            "GiantRedOctopus": "Pulpo Rojo Gigante",
+            "Treant": "Treant",
+            "AncientGoldDragon": "Dragón Dorado Antiguo",
+            "AncientSilverDragon": "Dragón Plateado Antiguo",
+            "AncientBlueDragon": "Dragón Azul Antiguo",
+            "AncientGreenDragon": "Dragón Verde Antiguo",
+            "BlueDracoLich": "Dracolich Azul",
+            "AncientRedDragon": "Dragón Rojo Antiguo",
+            "AncientWhiteDragon": "Dragón Blanco Antiguo",
+            "AncientBlackDragon": "Dragón Negro Antiguo",
+            "AncientGreyDragon": "Dragón Gris Antiguo",
+            "AncientPurpleDragon": "Dragón Púrpura Antiguo"
+        },
+        "CalibrationStatus": {
+            "Calibrated": "Calibrado",
+            "Calibrating": "Calibrando",
+            "Failed": "Fallido"
+        },
+        "Dialog": {
+            "SelectCategory": "Seleccionar Categoría",
+            "CategoryLabel": "Categoría"
+        },
+        "Settings": {
+            "DisplayUser": "Usuario de Pantalla",
+            "DisplayUserHint": "Nombre de usuario que interactuará con ScryForge",
+            "CategoryAssignments": "Asignaciones de Categoría"
+        }
+    }
+} 
