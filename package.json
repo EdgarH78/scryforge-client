@@ -4,7 +4,7 @@
   "description": "Tracks tokens on in IRL.",
   "type": "module",
   "scripts": {
-    "build": "rollup -c && node scripts/copy-lang.js",
+    "build": "rollup -c && node scripts/copy-lang.js && node scripts/copy-assets.js",
     "watch": "rollup -c -w",
     "test": "vitest",
     "test:ui": "vitest --ui",
