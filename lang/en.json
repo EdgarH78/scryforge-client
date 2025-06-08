@@ -1,0 +1,71 @@
+{
+    "SCRYFORGE": {
+        "CameraSelector": {
+            "Camera": "Camera",
+            "UseThisCamera": "Use This Camera",
+            "Cancel": "Cancel",
+            "Assign": "Assign"
+        },
+        "Controls": {
+            "Title": "ScryForge Controls",
+            "Calibrate": {
+                "Title": "Calibrate Display",
+                "NoCamera": "No camera selected."
+            },
+            "Camera": {
+                "Title": "Select Camera"
+            }
+        },
+        "Notifications": {
+            "NoCalibration": "No calibration found. Please calibrate from the camera selector."
+        },
+        "Modes": {
+            "Training": "Training",
+            "Production": "Production"
+        },
+        "Categories": {
+            "None": "None",
+            "Red": "Red",
+            "Blue": "Blue",
+            "Green": "Green",
+            "Violet": "Violet",
+            "Yellow": "Yellow",
+            "Orange": "Orange",
+            "Turquoise": "Turquoise",
+            "Pink": "Pink",
+            "White": "White",
+            "Black": "Black",
+            "LimeGreenViolet": "Lime Green & Violet",
+            "PinkGreen": "Pink & Green",
+            "YellowNightBlue": "Yellow & Night Blue",
+            "LightBlueOrange": "Light Blue & Orange",
+            "BrownTurquoise": "Brown & Turquoise",
+            "GiantRedOctopus": "Giant Red Octopus",
+            "Treant": "Treant",
+            "AncientGoldDragon": "Ancient Gold Dragon",
+            "AncientSilverDragon": "Ancient Silver Dragon",
+            "AncientBlueDragon": "Ancient Blue Dragon",
+            "AncientGreenDragon": "Ancient Green Dragon",
+            "BlueDracoLich": "Blue Dracolich",
+            "AncientRedDragon": "Ancient Red Dragon",
+            "AncientWhiteDragon": "Ancient White Dragon",
+            "AncientBlackDragon": "Ancient Black Dragon",
+            "AncientGreyDragon": "Ancient Grey Dragon",
+            "AncientPurpleDragon": "Ancient Purple Dragon"
+        },
+        "CalibrationStatus": {
+            "Calibrated": "Calibrated",
+            "Calibrating": "Calibrating",
+            "Failed": "Failed"
+        },
+        "Dialog": {
+            "SelectCategory": "Select Category",
+            "CategoryLabel": "Category"
+        },
+        "Settings": {
+            "DisplayUser": "Display User",
+            "DisplayUserHint": "Username of the display-only user that will interact with ScryForge",
+            "CategoryAssignments": "Category Assignments"
+        }
+    }
+} 
