@@ -3,7 +3,11 @@ import { ScryForgeServer,ScryforgeMarkers, CategoryPosition } from './types';
 export class HttpScryForgeServer implements ScryForgeServer {
     private baseUrl: string;
 
-    constructor(baseUrl: string = 'http://127.0.0.1:5000') {
+    /*constructor(baseUrl: string = 'http://127.0.0.1:8080') {
+        this.baseUrl = baseUrl;
+    }*/
+
+    constructor(baseUrl: string = 'https://theforgerealm.com') {
         this.baseUrl = baseUrl;
     }
 
@@ -11,7 +15,7 @@ export class HttpScryForgeServer implements ScryForgeServer {
         const formData = new FormData();
         formData.append('image', image);
 
-        const response = await fetch(`${this.baseUrl}/image/arucolocations`, {
+        const response = await fetch(`${this.baseUrl}/scryforge/api/v1/image/arucolocations`, {
             method: 'POST',
             body: formData
         });
@@ -28,7 +32,7 @@ export class HttpScryForgeServer implements ScryForgeServer {
         const formData = new FormData();
         formData.append('image', image);
 
-        const response = await fetch(`${this.baseUrl}/image/categories/positions`, {
+        const response = await fetch(`${this.baseUrl}/scryforge/api/v1/image/categories/positions`, {
             method: 'POST',
             body: formData
         });

@@ -296,7 +296,7 @@ function clearCalibrationSprites(): void {
 
 function startUpdateInterval(): void {
     if (updateInterval) clearInterval(updateInterval);
-    updateInterval = setInterval(updateTokenPositions, 3000);
+    updateInterval = setInterval(updateTokenPositions, 1000);
 }
 
 // Update base locations from ScryForge

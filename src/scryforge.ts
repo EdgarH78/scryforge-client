@@ -8,6 +8,7 @@ export class ScryForge {
     private camera: Camera | null = null;
     private calibration: Calibration | null = null;
     private worldTransformerFactory: WorldTransformerFactory;
+    private isScrying: boolean = false;
 
     constructor(scryingOrb: ScryingOrb, worldTransformerFactory: WorldTransformerFactory) {
         this.scryingOrb = scryingOrb;
@@ -19,20 +20,33 @@ export class ScryForge {
         if (!this.camera) {
             throw new Error("Camera not set");
         }
-        let scryData = await this.scryingOrb.scry(this.camera);
-        
-        if (!scryData.markersPoints || scryData.markersPoints.length < 4) {
+
+        // Return empty array if already scrying
+        if (this.isScrying) {
             return [];
         }
-        const worldCoordinateTransformer = this.worldTransformerFactory.createTransformer(scryData.markersPoints, corners);    
-        return scryData.categoryPositions.map(position => {
-            const worldPosition = worldCoordinateTransformer.transform(position.x, position.y);
-            return {
-                actorId: this.trackedActors.get(position.category)?.actorId ?? "",            
-                x: worldPosition.x,
-                y: worldPosition.y
+
+        try {
+            this.isScrying = true;
+            let scryData = await this.scryingOrb.scry(this.camera);
+            
+            if (!scryData.markersPoints || scryData.markersPoints.length < 4) {
+                return [];
             }
-        }).filter(position => position.actorId !== "");
+            const worldCoordinateTransformer = this.worldTransformerFactory.createTransformer(scryData.markersPoints, corners);    
+            return scryData.categoryPositions.map(position => {
+                const worldPosition = worldCoordinateTransformer.transform(position.x, position.y);
+                return {
+                    actorId: this.trackedActors.get(position.category)?.actorId ?? "",            
+                    x: worldPosition.x,
+                    y: worldPosition.y
+                }
+            }).filter(position => position.actorId !== "");
+        } catch (error) {
+            throw error;
+        } finally {
+            this.isScrying = false;
+        }
     }
 
     public canScry(): boolean {

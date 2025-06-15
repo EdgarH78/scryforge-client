@@ -318,5 +318,103 @@ describe('ScryForge', () => {
         });
     });
 
+    describe('concurrent scrying', () => {
+        it('should prevent concurrent scry calls by returning empty array', async () => {
+            // Set up tracked actors
+            scryForge.updateActorCategory('actor1', Category.RED);
+
+            let scryCallCount = 0;
+            const mockScryData: ScryData = {
+                categoryPositions: [
+                    {
+                        category: Category.RED,
+                        x: 50,
+                        y: 50,
+                        width: 10,
+                        height: 10
+                    }
+                ],
+                markersPoints: [
+                    { x: 0, y: 0 },
+                    { x: 100, y: 0 },
+                    { x: 100, y: 100 },
+                    { x: 0, y: 100 }
+                ]
+            };
+
+            // Make scry take some time to complete and track calls
+            (mockScryingOrb.scry as any).mockImplementation(async () => {
+                scryCallCount++;
+                await new Promise(resolve => setTimeout(resolve, 100));
+                return mockScryData;
+            });
+
+            const corners = [
+                { x: 0, y: 0 },
+                { x: 100, y: 0 },
+                { x: 100, y: 100 },
+                { x: 0, y: 100 }
+            ];
+
+            // Start first scry call
+            const firstCall = scryForge.scry(corners);
+            // Immediately start second scry call
+            const secondCall = scryForge.scry(corners);
+
+            // Second call should resolve immediately with empty array
+            const secondResult = await secondCall;
+            expect(secondResult).toEqual([]);
+            // At this point, only one call to the scrying orb should have happened
+            expect(scryCallCount).toBe(1);
+
+            // First call should complete normally
+            const firstResult = await firstCall;
+            expect(firstResult).toHaveLength(1);
+            expect(firstResult[0].actorId).toBe('actor1');
+            // Still only one call should have happened
+            expect(scryCallCount).toBe(1);
+        });
+
+        it('should reset scrying state when error occurs', async () => {
+            let scryCallCount = 0;
+            // First call will fail
+            (mockScryingOrb.scry as any).mockImplementation(async () => {
+                scryCallCount++;
+                throw new Error('Scrying failed');
+            });
+
+            const corners = [
+                { x: 0, y: 0 },
+                { x: 100, y: 0 },
+                { x: 100, y: 100 },
+                { x: 0, y: 100 }
+            ];
+
+            // First call should throw
+            await expect(scryForge.scry(corners)).rejects.toThrow('Scrying failed');
+            expect(scryCallCount).toBe(1);
+
+            // Set up success data for second call
+            const mockScryData: ScryData = {
+                categoryPositions: [],
+                markersPoints: [
+                    { x: 0, y: 0 },
+                    { x: 100, y: 0 },
+                    { x: 100, y: 100 },
+                    { x: 0, y: 100 }
+                ]
+            };
+            (mockScryingOrb.scry as any).mockImplementation(async () => {
+                scryCallCount++;
+                return mockScryData;
+            });
+
+            // Second call should succeed (not blocked by failed first call)
+            const result = await scryForge.scry(corners);
+            expect(result).toEqual([]);
+            expect(scryCallCount).toBe(2); // Should have made a second call
+        });
+    });
+
     // Add more test suites here for other ScryForge methods
 }); 
