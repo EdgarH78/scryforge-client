@@ -12,6 +12,7 @@ describe('ScryForge', () => {
     let mockCamera: Camera;
     let mockWorldTransformerFactory: WorldTransformerFactory;
     let mockWorldTransformer: WorldCoordinateTransformer;
+    let mockTokenVault: any;
     let scryForge: ScryForge;
 
     beforeEach(() => {
@@ -37,7 +38,39 @@ describe('ScryForge', () => {
             destroy: vi.fn()
         };
 
-        scryForge = new ScryForge(mockScryingOrb, mockWorldTransformerFactory);
+        // Mock calibrator
+        const mockCalibrator = {
+            begin: vi.fn()
+        };
+
+        // Mock auth server
+        const mockAuthServer = {
+            getAuthStatus: vi.fn(),
+            refreshAuth: vi.fn(),
+            tokenAuthStart: vi.fn(),
+            getAuthTokenStatus: vi.fn(),
+            isAuthenticated: vi.fn(),
+            forceRefreshAuthStatus: vi.fn()
+        };
+
+        // Mock token vault
+        mockTokenVault = {
+            getToken: vi.fn().mockReturnValue(null),
+            setKeys: vi.fn(),
+            clearToken: vi.fn(),
+            hasToken: vi.fn(),
+            getRefreshToken: vi.fn().mockReturnValue(null),
+            hasRefreshToken: vi.fn(),
+            tokensUpdated: new EventTarget()
+        };
+
+        scryForge = new ScryForge(
+            mockScryingOrb, 
+            mockWorldTransformerFactory,
+            mockCalibrator,
+            mockAuthServer,
+            mockTokenVault
+        );
         scryForge.setCamera(mockCamera);
     });
 
@@ -414,6 +447,42 @@ describe('ScryForge', () => {
             expect(result).toEqual([]);
             expect(scryCallCount).toBe(2); // Should have made a second call
         });
+    });
+
+    it('should get tracked actors', () => {
+        scryForge.updateActorCategory('actor1', Category.RED);
+        scryForge.updateActorCategory('actor2', Category.BLUE);
+        
+        const actors = scryForge.getTrackedActors();
+        expect(actors).toHaveLength(2);
+        expect(actors.find(a => a.actorId === 'actor1')?.category).toBe(Category.RED);
+        expect(actors.find(a => a.actorId === 'actor2')?.category).toBe(Category.BLUE);
+    });
+
+    it('should expose tokens updated event', () => {
+        const eventTarget = scryForge.getTokensUpdatedEvent();
+        expect(eventTarget).toBeInstanceOf(EventTarget);
+        expect(typeof eventTarget.addEventListener).toBe('function');
+        expect(typeof eventTarget.removeEventListener).toBe('function');
+        expect(typeof eventTarget.dispatchEvent).toBe('function');
+    });
+
+    it('should get current token', () => {
+        // Initially no token
+        expect(scryForge.getCurrentToken()).toBeNull();
+        
+        // Set a token via the token vault
+        mockTokenVault.getToken.mockReturnValue('test-jwt-token');
+        expect(scryForge.getCurrentToken()).toBe('test-jwt-token');
+    });
+
+    it('should get current refresh token', () => {
+        // Initially no refresh token
+        expect(scryForge.getCurrentRefreshToken()).toBeNull();
+        
+        // Set a refresh token via the token vault
+        mockTokenVault.getRefreshToken.mockReturnValue('test-refresh-token');
+        expect(scryForge.getCurrentRefreshToken()).toBe('test-refresh-token');
     });
 
     // Add more test suites here for other ScryForge methods

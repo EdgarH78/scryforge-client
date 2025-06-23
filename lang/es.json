@@ -14,10 +14,31 @@
             },
             "Camera": {
                 "Title": "Seleccionar Cámara"
+            },
+            "Auth": {
+                "Title": "Autenticación",
+                "Login": "Iniciar Sesión en ScryForge",
+                "Status": "Estado de Autenticación"
             }
         },
         "Notifications": {
-            "NoCalibration": "No se encontró calibración. Por favor, calibre desde el selector de cámara."
+            "NoCalibration": "No se encontró calibración. Por favor, calibre desde el selector de cámara.",
+            "AuthRequired": "Se requiere autenticación. Por favor, autentíquese con ScryForge.",
+            "AuthSuccess": "Autenticación exitosa con ScryForge.",
+            "AuthFailed": "La autenticación falló. Por favor, inténtelo de nuevo.",
+            "AuthCancelled": "La autenticación fue cancelada."
+        },
+        "Auth": {
+            "Title": "Autenticación de ScryForge",
+            "Description": "ScryForge requiere autenticación para acceder al servidor. Será redirigido para autenticarse usando su cuenta de Patreon.",
+            "LoginButton": "Iniciar Sesión con Patreon",
+            "Status": {
+                "Authenticated": "Autenticado",
+                "NotAuthenticated": "No Autenticado",
+                "Checking": "Verificando...",
+                "Error": "Error"
+            },
+            "PopupBlocked": "La ventana emergente de autenticación fue bloqueada. Por favor, permita ventanas emergentes para este sitio e inténtelo de nuevo."
         },
         "Modes": {
             "Training": "Entrenamiento",
