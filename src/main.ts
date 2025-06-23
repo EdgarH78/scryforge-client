@@ -8,11 +8,15 @@ import { ScryForge } from './scryforge';
 import { SimpleScryingOrb } from './scryingorb';
 import { Calibration, CalibrationStatus, Camera, Category } from './types';
 import { HttpScryForgeServer } from './server';
+import { HttpAuthServer } from './authserver';
 import { AdvancedViewPortCalibrator } from './advancedviewportcalibrator';
 import * as PIXI from 'pixi.js';
 import { CameraSelectorApp } from './cameraselector';
 import { WorldTransformerFactory } from './scryforgeworldcalibrator';
 import { localize, formatCategory } from './utils/i18n';
+import { AuthDialog } from './authdialog';
+import { InMemoryTokenManager } from './utils';
+import { ScryforgeAuthDecorator } from './scryforgeauthdecorator';
 
 // Add type declarations for TokenDocument
 declare global {
@@ -52,12 +56,28 @@ type ApplicationHeaderButton = {
 
   console.log("ScryForge main.js loaded");
 
-// Store categories and assignments
-const scryForgeServer = new HttpScryForgeServer();
-const scryForge = new ScryForge(new SimpleScryingOrb(scryForgeServer), new WorldTransformerFactory());
-const calibrator = new AdvancedViewPortCalibrator(scryForgeServer);
-const arucoScale = 0.4;
+// IIFE to create ScryForge instance and hide internal objects
+const scryForge = (() => {
+    const authServer = new HttpAuthServer();
+    const tokenManager = new InMemoryTokenManager();
+    const scryForgeServer = new ScryforgeAuthDecorator(
+        new HttpScryForgeServer('https://theforgerealm.com/scryforge', tokenManager), 
+        authServer, 
+        tokenManager
+    );
+    const worldTransformerFactory = new WorldTransformerFactory();
+    const calibrator = new AdvancedViewPortCalibrator(scryForgeServer);
+    
+    return new ScryForge(
+        new SimpleScryingOrb(scryForgeServer), 
+        worldTransformerFactory,
+        calibrator,
+        authServer,
+        tokenManager
+    );
+})();
 
+const arucoScale = 0.4;
 
 let updateInterval: NodeJS.Timeout | null = null;
 let calibrationSprites: PIXI.Sprite[] = [];
@@ -97,6 +117,32 @@ Hooks.once('init', () => {
         default: ''
     });
 
+    // Add token settings (hidden from config)
+    game.settings.register('scryforge', 'jwtToken', {
+        name: 'JWT Token',
+        scope: 'world',
+        config: false,
+        type: String,
+        default: ''
+    });
+
+    game.settings.register('scryforge', 'refreshToken', {
+        name: 'Refresh Token',
+        scope: 'world',
+        config: false,
+        type: String,
+        default: ''
+    });
+
+    // Add calibration setting (hidden from config)
+    game.settings.register('scryforge', 'calibration', {
+        name: 'Calibration',
+        scope: 'world',
+        config: false,
+        type: Object,
+        default: null
+    });
+
     // Add hooks for scene/viewport changes
     Hooks.on('canvasReady', () => {
         clearCalibrationSprites();
@@ -126,14 +172,83 @@ Hooks.once('ready', async () => {
         scryForge.updateActorCategory(actorId, category as Category);
     });
     
+    // Load saved tokens if they exist
+    const savedJwtToken = game.settings.get('scryforge', 'jwtToken') as string;
+    const savedRefreshToken = game.settings.get('scryforge', 'refreshToken') as string;
+    if (savedJwtToken && savedRefreshToken) {
+        try {
+            await scryForge.setTokens(savedJwtToken, savedRefreshToken);
+            console.log('ScryForge: Loaded saved authentication tokens');
+        } catch (error) {
+            console.warn('ScryForge: Failed to load saved tokens, clearing them', error);
+            // Clear invalid tokens from settings
+            await game.settings.set('scryforge', 'jwtToken', '');
+            await game.settings.set('scryforge', 'refreshToken', '');
+        }
+    }
+    
+    // Check if user is authenticated after loading tokens
+    const isAuthenticated = await scryForge.isAuthenticated();
+    if (!isAuthenticated) {
+        console.log('ScryForge: User not authenticated, showing auth dialog');
+        showAuthDialog();
+    }
+    
+    // Load saved calibration if it exists
+    const savedCalibration = game.settings.get('scryforge', 'calibration');
+    function isCalibration(obj: any): obj is Calibration {
+        return obj && typeof obj.x === 'number' && typeof obj.y === 'number' && typeof obj.width === 'number' && typeof obj.height === 'number';
+    }
+    if (isCalibration(savedCalibration)) {
+        scryForge.setCalibration(savedCalibration);
+        displayCalibrationSprites(savedCalibration);
+        console.log('ScryForge: Loaded saved calibration');
+    }
+    
+    // Listen for token updates and save them to settings
+    scryForge.getTokensUpdatedEvent().addEventListener('tokensUpdated', async () => {
+        console.log('ScryForge: Tokens updated, saving to settings');
+        
+        // Get current tokens from ScryForge
+        const token = scryForge.getCurrentToken();
+        const refreshToken = scryForge.getCurrentRefreshToken();
+        
+        // Save tokens to settings
+        if (token) {
+            await game.settings.set('scryforge', 'jwtToken', token);
+        }
+        if (refreshToken) {
+            await game.settings.set('scryforge', 'refreshToken', refreshToken);
+        }
+        
+        // If tokens were cleared, also clear from settings
+        if (!token && !refreshToken) {
+            await game.settings.set('scryforge', 'jwtToken', '');
+            await game.settings.set('scryforge', 'refreshToken', '');
+        }
+    });
+    
+    // Don't check auth on startup - let it happen when needed
+    // This prevents spamming the auth server on every module load
+    
     // Start in the correct mode if display user
     if (isDisplayUser()) {
         const cameraSelector = CameraSelectorApp.instance();
-        cameraSelector.onCameraSelected((c) => {
-            scryForge.setCamera(c);                     
+        cameraSelector.onCameraSelected(async (c) => {
+            scryForge.setCamera(c);
             cameraSelector.close();
+            
+            // Check authentication before starting calibration
+            const isAuthenticated = await scryForge.isAuthenticated();
+            if (!isAuthenticated) {
+                console.log('ScryForge: Authentication required before calibration');
+                ui.notifications?.warn(localize('Notifications.AuthRequired'));
+                showAuthDialog();
+                return;
+            }
+            
             calibrate(c);
-          });
+        });
         startUpdateInterval();
     }
 });
@@ -216,17 +331,30 @@ function showBaseAssignmentDialog(actor: Actor): void {
 
 async function calibrate(camera: Camera): Promise<void> {
     console.log("Starting calibration...");
+    
+    // Check authentication before starting calibration
+    const isAuthenticated = await scryForge.isAuthenticated();
+    if (!isAuthenticated) {
+        console.error('ScryForge: Cannot calibrate without authentication');
+        ui.notifications?.error(localize('Notifications.AuthRequired'));
+        return;
+    }
+    
+    // Don't check auth proactively - let the server tell us if we need it
+    // This prevents unnecessary auth checks that spam the server
+    
     const canvas = getCanvas();
-    if (!canvas.scene) return;    
+    if (!canvas.scene) return;
 
-    const gen = calibrator.begin(camera);
+    const gen = scryForge.getCalibrator().begin(camera);
     for await (const result of gen) {
         console.log("Calibration step:", result.status);
 
-        
         if (result.status === CalibrationStatus.CALIBRATED) {
             scryForge.setCalibration(result.calibration);
-            console.log('ScryForge: Calibration successful');
+            // Save calibration to settings
+            await getGame().settings.set('scryforge', 'calibration', result.calibration);
+            console.log('ScryForge: Calibration successful and saved');
             await displayCalibrationSprites(result.calibration);
             break;
         }
@@ -346,6 +474,16 @@ async function updateTokenPositions(): Promise<void> {
         }
     } catch (error) {
         console.error('Error in ScryForge token positions:', error);
+        
+        // Only show auth notification for actual auth errors, not network issues
+        if (error instanceof Error && 
+            (error.message.includes('Authentication required') || 
+             error.message.includes('No JWT token found'))) {
+            // Don't spam notifications - only show once per session
+            if (!ui.notifications?.active.find(n => $(n).text().includes(localize('Notifications.AuthRequired')))) {
+                ui.notifications?.warn(localize('Notifications.AuthRequired'));
+            }
+        }
     }
 }
 
@@ -367,6 +505,38 @@ function getViewportRect() {
     };
 }
 
+// Authentication helper functions
+async function checkAuthenticationStatus(): Promise<boolean> {
+    try {
+        return await scryForge.isAuthenticated();
+    } catch (error) {
+        console.error('Error checking authentication status:', error);
+        ui.notifications?.error(localize('Notifications.AuthFailed'));
+        return false;
+    }
+}
+
+// Force refresh auth status (for manual auth button)
+async function forceCheckAuthenticationStatus(): Promise<boolean> {
+    try {
+        const isAuth = await scryForge.isAuthenticated();
+        if (!isAuth) {
+            ui.notifications?.warn(localize('Notifications.AuthRequired'));
+            showAuthDialog();
+        }
+        return isAuth;
+    } catch (error) {
+        console.error('Error checking authentication status:', error);
+        ui.notifications?.error(localize('Notifications.AuthFailed'));
+        return false;
+    }
+}
+
+function showAuthDialog(): void {
+    const authDialog = new AuthDialog(scryForge);
+    authDialog.render(true);
+}
+
 Hooks.on('getSceneControlButtons', (controls: SceneControl[]) => {
     if (!isDisplayUser()) return;
   
@@ -384,7 +554,8 @@ Hooks.on('getSceneControlButtons', (controls: SceneControl[]) => {
           icon: 'fas fa-crosshairs',
           visible: true,
           button: true,
-          onClick: () => {
+          onClick: async () => {
+            // Don't check auth proactively - let the server handle auth errors
             const scCamera = scryForge.getCamera();
             if (!scCamera) {
               ui.notifications?.warn(localize('Controls.Calibrate.NoCamera'));
@@ -402,6 +573,17 @@ Hooks.on('getSceneControlButtons', (controls: SceneControl[]) => {
           onClick: () => {
             const cameraSelector = CameraSelectorApp.instance();
             cameraSelector.render(true);
+          }
+        },
+        {
+          name: 'auth',
+          title: localize('Controls.Auth.Title'),
+          icon: 'fas fa-key',
+          visible: true,
+          button: true,
+          onClick: async () => {
+            // Force refresh auth status when user explicitly requests it
+            await forceCheckAuthenticationStatus();
           }
         }
       ]

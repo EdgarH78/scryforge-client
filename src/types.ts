@@ -32,11 +32,23 @@ export interface ScryForgeServer {
     getCategoryPositions(image: Blob): Promise<CategoryPosition[]>;
 }
 
+export interface ScryforgeAuthDecorator extends ScryForgeServer {
+    // Inherits all methods from ScryForgeServer
+}
+
+export interface ForgeRealmAuthServer {
+    getAuthStatus(token?: string): Promise<AuthStatus>;
+    refreshAuth(token: string, refreshToken: string): Promise<AuthResponse>;
+    tokenAuthStart(clientName?: string): Promise<string>;
+    getAuthTokenStatus(token: string): Promise<TokenStatusResult>;
+    isAuthenticated(token?: string): Promise<boolean>;
+    forceRefreshAuthStatus(token?: string): Promise<boolean>;
+}
+
 export interface CalibrationResult {
     status: CalibrationStatus;
     calibration: Calibration;
 }
-
 
 export interface Calibration {
     x: Percentage;
@@ -137,4 +149,64 @@ export function markersToPoints(markers: ScryforgeMarkers): Point[] {
     return [markers.top_left, markers.top_right, markers.bottom_right, markers.bottom_left]
         .filter(x => x != undefined && x != null)
         .map(x => ({ x: x[0], y: x[1] }));
+}
+
+export interface AuthStatus {
+    isAuthenticated: boolean;
+    lastChecked: number;
+    error?: string;
+    token?: string; // JWT token for Bearer authentication
+}
+
+export interface TokenStatusResult {
+    fulfilled: boolean;
+    token?: string; // JWT token returned after successful authentication
+    refreshToken?: string; // Refresh token returned after successful authentication
+}
+
+export interface AuthResponse {
+    status: string;
+    message: string;
+    token: string; // JWT token for authentication
+    refresh_token: string; // Refresh token for token renewal
+}
+
+// Token management interface
+export interface TokenVault {
+    getToken(): string | null;
+    getRefreshToken(): string | null;
+    setKeys(token: string, refreshToken: string): void;
+    clearToken(): void;
+    hasToken(): boolean;
+    hasRefreshToken(): boolean;
+    tokensUpdated: EventTarget;
+}
+
+// Custom error classes for different HTTP status codes
+export class AuthenticationError extends Error {
+    constructor(message: string = 'Authentication required') {
+        super(message);
+        this.name = 'AuthenticationError';
+    }
+}
+
+export class RateLimitError extends Error {
+    constructor(message: string = 'Rate limit exceeded') {
+        super(message);
+        this.name = 'RateLimitError';
+    }
+}
+
+export class ServiceUnavailableError extends Error {
+    constructor(message: string = 'Service unavailable') {
+        super(message);
+        this.name = 'ServiceUnavailableError';
+    }
+}
+
+export class BadRequestError extends Error {
+    constructor(message: string = 'Bad request') {
+        super(message);
+        this.name = 'BadRequestError';
+    }
 }

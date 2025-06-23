@@ -2,14 +2,36 @@
 
 A Foundry VTT module that enables real-time camera calibration and marker detection for enhanced virtual tabletop gaming experiences. This client module works in conjunction with the Scryforge server to provide accurate viewport calibration and marker tracking.
 
-## Server Access
+## Server Access & Authentication
 
-While this client module is open-source under the MIT License, it requires access to the Scryforge server for full functionality. Server access is available through a subscription service. This provides:
+While this client module is open-source under the MIT License, it requires access to the ScryForge server for full functionality. Server access is available through a subscription service. This provides:
 
 - Dedicated server infrastructure
 - Real-time marker detection and processing
 - Reliable and maintained API endpoints
 - Technical support
+
+**Authentication is required to use ScryForge.** You can authenticate by visiting [https://theforgerealm.com/auth/login](https://theforgerealm.com/auth/login) which will take you through OAuth using your Patreon account.
+
+### Authentication Process
+
+1. **Initial Setup**: When you first use ScryForge, you'll be prompted to authenticate
+2. **OAuth Flow**: Click the authentication button in the ScryForge controls to open the login window
+3. **Patreon Login**: You'll be redirected to authenticate with your Patreon account
+4. **Authorization**: Grant permission to ScryForge to access your account
+5. **Completion**: Once authenticated, you'll have full access to ScryForge features
+
+### Authentication Status
+
+- **Authenticated**: You have full access to all ScryForge features
+- **Not Authenticated**: You'll need to authenticate before using calibration or tracking features
+- **Error**: If authentication fails, check your internet connection and try again
+
+### Troubleshooting Authentication
+
+- **Popup Blocked**: If the authentication window doesn't open, check your browser's popup blocker settings
+- **Login Failed**: Ensure you have a valid Patreon account and try the authentication process again
+- **Session Expired**: If your session expires, you'll need to re-authenticate
 
 Visit [your-website-here] to learn more about subscription options and pricing.
 
@@ -20,6 +42,7 @@ Visit [your-website-here] to learn more about subscription options and pricing.
 - Automatic marker tracking and position adjustment
 - Robust error handling and recovery
 - Fine-tuning capabilities for precise calibration
+- **OAuth authentication with Patreon integration**
 
 ## Prerequisites
 

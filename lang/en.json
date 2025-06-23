@@ -14,10 +14,31 @@
             },
             "Camera": {
                 "Title": "Select Camera"
+            },
+            "Auth": {
+                "Title": "Authentication",
+                "Login": "Login to ScryForge",
+                "Status": "Authentication Status"
             }
         },
         "Notifications": {
-            "NoCalibration": "No calibration found. Please calibrate from the camera selector."
+            "NoCalibration": "No calibration found. Please calibrate from the camera selector.",
+            "AuthRequired": "Authentication required. Please authenticate with ScryForge.",
+            "AuthSuccess": "Successfully authenticated with ScryForge.",
+            "AuthFailed": "Authentication failed. Please try again.",
+            "AuthCancelled": "Authentication was cancelled."
+        },
+        "Auth": {
+            "Title": "ScryForge Authentication",
+            "Description": "ScryForge requires authentication to access the server. You will be redirected to authenticate using your Patreon account.",
+            "LoginButton": "Login with Patreon",
+            "Status": {
+                "Authenticated": "Authenticated",
+                "NotAuthenticated": "Not Authenticated",
+                "Checking": "Checking...",
+                "Error": "Error"
+            },
+            "PopupBlocked": "Authentication popup was blocked. Please allow popups for this site and try again."
         },
         "Modes": {
             "Training": "Training",
